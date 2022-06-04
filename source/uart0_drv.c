@@ -15,6 +15,7 @@
 #include "MKL43Z4.h"
 #include "pin_mux.h"
 #include "uart0_drv.h"
+#include "ringBuffer.h"
 
 /*==================[macros and definitions]=================================*/
 #define TP3_UART LPUART0
@@ -31,11 +32,9 @@ static lpuart_dma_handle_t lpuartDmaHandle;
 static dma_handle_t lpuartTxDmaHandle;
 static void *rxRingBufferPtr;
 volatile int8_t rxByte;
-/*
- * ver. Estaba del ejemplo
- */
-volatile bool txOnGoing = false;
 
+volatile bool txOnGoingDma = false;
+volatile bool txOnGoingUart = false;
 
 /*==================[internal functions declaration]=========================*/
 
@@ -49,7 +48,7 @@ volatile bool txOnGoing = false;
 static void LPUART_UserCallback(LPUART_Type *base, lpuart_dma_handle_t *handle, status_t status, void *userData){
 
     if (kStatus_LPUART_TxIdle == status){
-        txOnGoing = false;
+        txOnGoingDma = false;
     }
 }
 
@@ -58,7 +57,9 @@ void LPUART0_IRQHandler(void){
     	rxByte = LPUART_ReadByte(TP3_UART); // limpio bandera ISR
     	ringBuffer_putData(rxRingBufferPtr, rxByte);
     }
-
+//    if( kLPUART_TxDataRegEmptyFlag & LPUART_GetStatusFlags(TP3_UART)){
+//    	txOnGoingUart = false;
+//    }
 }
 
 /*==================[external functions definition]==========================*/
@@ -68,7 +69,9 @@ void uart0_drv_init(void){
 	lpuart_config_t config;
 
 
-    CLOCK_SetLpsci0Clock(0x1U);
+    CLOCK_SetLpuart0Clock(0x1U);
+
+    CLOCK_EnableClock(kCLOCK_PortA);
 
     /* PORTA1 (pin 35) is configured as LPUART0_RX */
     PORT_SetPinMux(PORTA, 1U, kPORT_MuxAlt2);
@@ -93,6 +96,7 @@ void uart0_drv_init(void){
 
     /* Habilita interrupciones */
     LPUART_EnableInterrupts(TP3_UART, kLPUART_RxDataRegFullInterruptEnable);
+    //LPUART_EnableInterrupts(TP3_UART, kLPUART_TxDataRegEmptyInterruptEnable);
     EnableIRQ(TP3_UART_IRQ);
 
     rxRingBufferPtr = ringBuffer_init(RB_SIZE);
@@ -122,6 +126,24 @@ void uart0_drv_init(void){
             NULL);
 }
 
+int32_t uart0_drv_envDatos(uint8_t *pBuf, int32_t size){
+	if(txOnGoingDma && txOnGoingUart){
+		return 0;
+	}else{
+		lpuart_transfer_t xfer;
+
+		if(size > TX_BUFFER_DMA_SIZE){
+			size = TX_BUFFER_DMA_SIZE;
+		}
+		memcpy(txBuffer_dma,pBuf,size);
+		xfer.data = txBuffer_dma;
+		xfer.dataSize = size;
+		txOnGoingDma = true;
+		//txOnGoingUart = true;
+		LPUART_TransferSendDMA(TP3_UART, &lpuartDmaHandle, &xfer);
+		return(size);
+	}
+}
 
 /** \brief recibe datos por puerto serie accediendo al RB
  **
@@ -146,4 +168,3 @@ int32_t uart0_drv_recDatos(uint8_t *pBuf, int32_t size){
     return ret;
 }
 /*==================[end of file]============================================*/
-

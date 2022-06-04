@@ -23,6 +23,7 @@ void uart0_drv_init(void);
 
 
 int32_t uart0_drv_recDatos(uint8_t*, int32_t);
+int32_t uart0_drv_envDatos(uint8_t*, int32_t);
 
 /*==================[cplusplus]==============================================*/
 #ifdef __cplusplus

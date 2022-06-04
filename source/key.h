@@ -1,7 +1,6 @@
-/* Copyright 2017, DSI FCEIA UNR - Sistemas Digitales 2
+/* Copyright 2018, DSI FCEIA UNR - Sistemas Digitales 2
  *    DSI: http://www.dsi.fceia.unr.edu.ar/
- * Copyright 2017, Diego Alegrechi
- * Copyright 2017, Gustavo Muro
+ * Copyright 2018, Gustavo Muro
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +35,7 @@
 #define KEY_H_
 
 /*==================[inclusions]=============================================*/
-#include "SD2_board.h"
+#include "SD2_board_KL43.h"
 
 /*==================[cplusplus]==============================================*/
 #ifdef __cplusplus
@@ -53,6 +52,7 @@ extern "C" {
 void key_init(void);
 bool key_getPressEv(board_swId_enum id);
 void key_periodicTask1ms(void);
+
 
 /*==================[cplusplus]==============================================*/
 #ifdef __cplusplus
