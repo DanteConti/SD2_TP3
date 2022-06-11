@@ -203,12 +203,10 @@ void MefRxTick(void *ringBufferComandos){
 				}
 				if(start){
 					(rxChar == 0x31) ? (start = false) : (estado = MefRx_EsperandoSTX);
+				}else if(rxChar == 0x30){
+					estado = MefRx_LeyendoPerifericoMSB;
 				}else{
-					if(rxChar == 0x30){
-						estado = MefRx_LeyendoPerifericoMSB;
-					}else{
-						estado = MefRx_EsperandoSTX;
-					}
+					estado = MefRx_EsperandoSTX;
 				}
 			}
 			break;
@@ -218,8 +216,7 @@ void MefRxTick(void *ringBufferComandos){
 					estado = MefRx_LeyendoID;
 					start = true;
 					break;
-				}
-				if(rxChar == 0x30){
+				}else if(rxChar == 0x30){
 					tmpPeriferico = LED_T;
 				}else if(rxChar == 0x31){
 					tmpPeriferico = SW_T;
@@ -259,8 +256,7 @@ void MefRxTick(void *ringBufferComandos){
 					estado = MefRx_LeyendoID;
 					start = true;
 					break;
-				}
-				if(rxChar == 0x45){ // accion recibida E
+				}else if(rxChar == 0x45){ // accion recibida E
 					tmpComando = ENCENDER;
 				}else if(rxChar == 0x41){ // accion recibida A
 					tmpComando = APAGAR;

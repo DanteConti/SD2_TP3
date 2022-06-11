@@ -35,7 +35,7 @@ int main(void) {
     uart0_drv_init();
 
     /* Init mef Rx */
-    MefRxInit();
+    //MefRxInit();
     cmdBuffer = ringBufferComando_init(CMD_BUFFER_SIZE);
 
     while(1) {
