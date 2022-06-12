@@ -13,7 +13,10 @@
 #include <stdio.h>
 #include <math.h>
 
-/* ================== [Definiciones] ================== */
+/* ================== [Punteros a funciones] ================== */
+
+static uartReadByte_t uartReadByte;
+static uartSend_t uartSend;
 
 /* ==================[Enumeracion para estados MEF] ================== */
 // Mef Rx
@@ -80,9 +83,9 @@ IdPeriferico definePeriferico(TipoPeriferico tipoPeriferico, uint8_t tmpRxByte){
 	return retVal;
 }
 
-bool MEF_readByte(uint8_t *retPtr){
+/*bool MEF_readByte(uint8_t *retPtr){
 	return (uart0_drv_recDatos(retPtr, 1) == 1);
-}
+}*/
 
 // Mef Procesamiento
 uint16_t getAcc(){
@@ -98,39 +101,32 @@ void separarEnDigitos(uint8_t *d0, uint8_t *d1, uint8_t *d2, uint16_t value){
 }
 
 uint8_t *ejecutarComando(uint8_t *resultado, Comando *comandoSiguiente){
-	//uint8_t *resultado;
 
 	switch(comandoSiguiente->pedido){
 		case ENCENDER:
 			if(comandoSiguiente->periferico == LED_ID_ROJO){
 				board_setLed(BOARD_LED_ID_ROJO, BOARD_LED_MSG_ON);
-				//resultado = malloc(sizeof(uint8_t)*8);
 				sprintf(resultado, ":1001E\n");
 			}else{
 				board_setLed(BOARD_LED_ID_VERDE, BOARD_LED_MSG_ON);
-				//resultado = malloc(sizeof(uint8_t)*8);
 				sprintf(resultado, ":1002E\n");
 			}
 			break;
 		case APAGAR:
 			if(comandoSiguiente->periferico == LED_ID_ROJO){
 				board_setLed(BOARD_LED_ID_ROJO, BOARD_LED_MSG_OFF);
-				//resultado = malloc(sizeof(uint8_t)*8);
 				sprintf(resultado, ":1001A\n");
 			}else{
 				board_setLed(BOARD_LED_ID_VERDE, BOARD_LED_MSG_OFF);
-				//resultado = malloc(sizeof(uint8_t)*8);
 				sprintf(resultado, ":1002A\n");
 			}
 			break;
 		case TOGGLE:
 			if(comandoSiguiente->periferico == LED_ID_ROJO){
 				board_setLed(BOARD_LED_ID_ROJO, BOARD_LED_MSG_TOGGLE);
-				//resultado = malloc(sizeof(uint8_t)*8);
 				sprintf(resultado, ":1001T\n");
 			}else{
 				board_setLed(BOARD_LED_ID_VERDE, BOARD_LED_MSG_TOGGLE);
-				//resultado = malloc(sizeof(uint8_t)*8);
 				sprintf(resultado, ":1002T\n");
 			}
 			break;
@@ -138,7 +134,6 @@ uint8_t *ejecutarComando(uint8_t *resultado, Comando *comandoSiguiente){
 			if(comandoSiguiente->periferico == SW_ID_1){
 				bool isOn;
 				isOn = board_getSw(BOARD_SW_ID_1);
-				//resultado = malloc(sizeof(uint8_t)*8);
 				if(isOn){
 					sprintf(resultado, ":1011P\n");
 				}else{
@@ -147,7 +142,6 @@ uint8_t *ejecutarComando(uint8_t *resultado, Comando *comandoSiguiente){
 			}else if(comandoSiguiente->periferico == SW_ID_3){
 				bool isOn;
 				isOn = board_getSw(BOARD_SW_ID_3);
-				//resultado = malloc(sizeof(uint8_t)*8);
 				if(isOn){
 					sprintf(resultado, ":1013P\n");
 				}else{
@@ -158,7 +152,6 @@ uint8_t *ejecutarComando(uint8_t *resultado, Comando *comandoSiguiente){
 				uint16_t acc;
 				acc = getAcc();
 				separarEnDigitos(&D0, &D1, &D2, acc);
-				//resultado = malloc(sizeof(uint8_t)*9);
 				sprintf(resultado, ":1020%d%d%d\n", D2, D1, D0);
 			}
 			break;
@@ -172,8 +165,8 @@ uint8_t *ejecutarComando(uint8_t *resultado, Comando *comandoSiguiente){
 
 /* ================== [funciones publicas] ================== */
 // Mef Rx
-void MefRxInit(){
-
+void MefRxInit(uartReadByte_t uartReadByteImplementation){
+	uartReadByte = uartReadByteImplementation;
 }
 
 void MefRxTick(void *ringBufferComandos){
@@ -184,7 +177,8 @@ void MefRxTick(void *ringBufferComandos){
 	static Comando comando;
 	uint8_t rxChar;
 
-	byteAvailable = uart0_drv_recDatos(&rxChar, 1);
+	//byteAvailable = uart0_drv_recDatos(&rxChar, 1);
+	byteAvailable = uartReadByte(&rxChar);
 
 	switch(estado){
 		case MefRx_EsperandoSTX:
@@ -290,8 +284,8 @@ void MefRxTick(void *ringBufferComandos){
 }
 
 // Mef Procesamiento
-void MefProcesamientoInit(){
-
+void MefProcesamientoInit(uartSend_t uartSendImplementation){
+	uartSend = uartSendImplementation;
 }
 
 void MefProcesamientoTick(void *ringBufferComandos){
@@ -311,7 +305,7 @@ void MefProcesamientoTick(void *ringBufferComandos){
 			estadoMP = MefProcesamiento_TransmitiendoRespuesta;
 			break;
 		case MefProcesamiento_TransmitiendoRespuesta:
-			if( uart0_drv_envDatos(resultado, strlen(resultado)) ){
+			if( uartSend(resultado, strlen(resultado)) ){
 				estadoMP = MefProcesamiento_LeyendoComandoSiguiente;
 			}
 			break;

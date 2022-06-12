@@ -8,11 +8,15 @@
 #ifndef MEF_H_
 #define MEF_H_
 
-#include "uart0_drv.h"
 #include "SD2_board_KL43.h"
 
 #define STX 0x3A // ":"
 #define ETX 0x0A // LF
+
+/* ================== [Punteros a funciones] ================== */
+
+typedef bool (*uartReadByte_t)(uint8_t*);
+typedef int32_t (*uartSend_t)(uint8_t*, int32_t);
 
 /* ================== [Enumeraciones y estructuras públicas] ================== */
 // Mef Rx
@@ -49,11 +53,11 @@ typedef struct __attribute__((__packed__)){
 
 /* ================== [Funciones públicas] ================== */
 // Mef Rx
-void MefRxInit(void);
+void MefRxInit(uartReadByte_t);
 void MefRxTick(void*);
 
 // Mef Procesamiento
-void MefProcesamientoInit(void);
+void MefProcesamientoInit(uartSend_t);
 void MefProcesamientoTick(void*);
 
 #endif /* MEF_H_ */

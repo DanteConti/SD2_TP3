@@ -1,20 +1,34 @@
+/* Librerias generales */
 #include <stdio.h>
 #include "board.h"
 #include "pin_mux.h"
 #include "clock_config.h"
 #include "MKL43Z4.h"
 #include "fsl_debug_console.h"
-/* TODO: insert other include files here. */
+
+/* Librerias del proyecto */
 #include "SD2_board_KL43.h"
 #include "MEF.h"
+#include "uart0_drv.h"
+#include "uart2_drv.h"
 #include "ringBuffer.h"
 #include "mma8451.h"
 #include "SD2_I2C.h"
-/* TODO: insert other definitions and declarations here. */
+
+/* Macro para elegir entre LPUart0 o Uart2
+ * Comentar para usar Uart2
+ * Descomentar para usar LPUart0
+ */
+#define USE_UART0
 
 #define CMD_BUFFER_SIZE 21
 
+/* Buffer de comandos recibidos */
 void *cmdBuffer;
+
+/* Punteros a funciones */
+static bool uartReadByte(uint8_t*);
+static int32_t uartSend(uint8_t*, int32_t);
 
 int main(void) {
 
@@ -31,11 +45,27 @@ int main(void) {
     mma8451_init_continuous();
     mma8451_setDataRate(DR_12p5hz);
 
-    /* Init USB0 */
+#ifdef USE_UART0
+
+    /* Init LPUart0 */
     uart0_drv_init();
 
+/* USE_UART0 */
+#else
+
+    /* Init Uart2 */
+    uart2_drv_init();
+
+/*USE_UART0*/
+#endif
+
     /* Init mef Rx */
-    //MefRxInit();
+    MefRxInit(uartReadByte);
+
+    /* Init mef Procesamiento */
+    MefProcesamientoInit(uartSend);
+
+    /* Init buffer comandos recibidos */
     cmdBuffer = ringBufferComando_init(CMD_BUFFER_SIZE);
 
     while(1) {
@@ -44,3 +74,25 @@ int main(void) {
     }
     return 0 ;
 }
+
+#ifdef USE_UART0
+
+bool uartReadByte(uint8_t *strByte){
+	return (uart0_drv_recDatos(strByte, 1));
+}
+
+int32_t uartSend(uint8_t *sendBuffer, int32_t size){
+	return (uart0_drv_envDatos(sendBuffer, size));
+}
+
+#else
+
+bool uartReadByte(uint8_t *strByte){
+	return (uart2_drv_recDatos(strByte, 1));
+}
+
+int32_t uartSend(uint8_t *sendBuffer, int32_t size){
+	return (uart2_drv_envDatos(sendBuffer, size));
+}
+
+#endif
