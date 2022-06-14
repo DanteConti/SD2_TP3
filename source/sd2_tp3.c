@@ -46,20 +46,6 @@ int main(void) {
     mma8451_init_continuous();
     mma8451_setDataRate(DR_12p5hz);
 
-//#ifdef USE_UART0
-//
-//    /* Init LPUart0 */
-//    uart0_drv_init();
-//
-///* USE_UART0 */
-//#else
-//
-//    /* Init Uart2 */
-//    uart2_drv_init();
-//
-///*USE_UART0*/
-//#endif
-
     /* Init UART */
     uartInit();
 
