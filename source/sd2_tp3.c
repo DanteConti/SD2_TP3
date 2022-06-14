@@ -19,7 +19,7 @@
  * Comentar para usar Uart2
  * Descomentar para usar LPUart0
  */
-#define USE_UART0
+//#define USE_UART0
 
 #define CMD_BUFFER_SIZE 21
 
@@ -29,6 +29,7 @@ void *cmdBuffer;
 /* Punteros a funciones */
 static bool uartReadByte(uint8_t*);
 static int32_t uartSend(uint8_t*, int32_t);
+static void uartInit(void);
 
 int main(void) {
 
@@ -45,19 +46,22 @@ int main(void) {
     mma8451_init_continuous();
     mma8451_setDataRate(DR_12p5hz);
 
-#ifdef USE_UART0
+//#ifdef USE_UART0
+//
+//    /* Init LPUart0 */
+//    uart0_drv_init();
+//
+///* USE_UART0 */
+//#else
+//
+//    /* Init Uart2 */
+//    uart2_drv_init();
+//
+///*USE_UART0*/
+//#endif
 
-    /* Init LPUart0 */
-    uart0_drv_init();
-
-/* USE_UART0 */
-#else
-
-    /* Init Uart2 */
-    uart2_drv_init();
-
-/*USE_UART0*/
-#endif
+    /* Init UART */
+    uartInit();
 
     /* Init mef Rx */
     MefRxInit(uartReadByte);
@@ -85,6 +89,11 @@ int32_t uartSend(uint8_t *sendBuffer, int32_t size){
 	return (uart0_drv_envDatos(sendBuffer, size));
 }
 
+void uartInit(){
+	uart0_drv_init();
+}
+
+/* IS_UART0 */
 #else
 
 bool uartReadByte(uint8_t *strByte){
@@ -93,6 +102,10 @@ bool uartReadByte(uint8_t *strByte){
 
 int32_t uartSend(uint8_t *sendBuffer, int32_t size){
 	return (uart2_drv_envDatos(sendBuffer, size));
+}
+
+void uartInit(){
+	uart2_drv_init();
 }
 
 #endif

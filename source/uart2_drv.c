@@ -63,11 +63,11 @@ void uart2_drv_init(){
 	/* Conexiones UART2
 	 * UART2_Tx => PTD3 => J1P06
 	 * UART2_Rx => PTD2 => J2P04
-	 * RE 		=> PTC7 => J1P11
-	 * DE		=> PTC5 => J1P15
+	 * DE 		=> PTC7 => J1P11
+	 * RE		=> PTC5 => J1P15
 	 * */
 
-	/* Pin init */
+	/* RE DE Pin init */
 	gpio_pin_config_t deReConfig = {
 		.outputLogic = 0,
 		.pinDirection = kGPIO_DigitalOutput,
@@ -97,6 +97,7 @@ void uart2_drv_init(){
 
 	GPIO_PortClear(GPIOC, PE_RE_MASK);
 
+	/* Rx Tx pin init */
 	PORT_SetPinMux(PORTD, 2, kPORT_MuxAlt3);
 	PORT_SetPinMux(PORTD, 3, kPORT_MuxAlt3);
 
@@ -111,13 +112,12 @@ void uart2_drv_init(){
 	UART_Init(UART2, &uartConfig, CLOCK_GetFreq(kCLOCK_BusClk));
 
 	UART_EnableInterrupts(UART2, kUART_RxDataRegFullInterruptEnable);
-	UART_EnableInterrupts(UART2, kLPUART_TransmissionCompleteInterruptEnable);
 	EnableIRQ(UART2_FLEXIO_IRQn);
 
 	/* DMA Init */
 	DMAMUX_Init(DMAMUX0);
 
-	/* Set channel for LPUART  */
+	/* Set channel for UART2  */
 	DMAMUX_SetSource(DMAMUX0, UART_TX_DMA_CHANNEL, kDmaRequestMux0UART2Tx);
 	DMAMUX_EnableChannel(DMAMUX0, UART_TX_DMA_CHANNEL);
 
