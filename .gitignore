@@ -5,5 +5,7 @@
 !slcd/
 !slcd/*
 !readme.md
+!programaCatedra/
+!programaCatedra/*
 source/mtb.c
 source/semihost_hardfault.c
