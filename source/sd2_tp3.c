@@ -37,7 +37,7 @@ int main(void) {
     BOARD_InitBootClocks();
 
     /* Init pines GPIO */
-	board_init();
+    board_init();
 
     /* Init I2C */
     SD2_I2C_init();
