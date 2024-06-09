@@ -14,12 +14,14 @@
 #include "ringBuffer.h"
 #include "mma8451.h"
 #include "SD2_I2C.h"
+#include "ADC0.h"
+#include "common.h"
 
 /* Macro para elegir entre LPUart0 o Uart2
  * Comentar para usar Uart2
  * Descomentar para usar LPUart0
  */
-//#define USE_UART0
+#define USE_UART0
 
 #define CMD_BUFFER_SIZE 21
 
@@ -27,8 +29,8 @@
 void *cmdBuffer;
 
 /* Punteros a funciones */
-static bool uartReadByte(uint8_t*);
-static int32_t uartSend(uint8_t*, int32_t);
+static bool uartReadByte(char*);
+static int32_t uartSend(char*, int32_t);
 static void uartInit(void);
 
 int main(void) {
@@ -37,7 +39,7 @@ int main(void) {
     BOARD_InitBootClocks();
 
     /* Init pines GPIO */
-    board_init();
+	board_init();
 
     /* Init I2C */
     SD2_I2C_init();
@@ -55,6 +57,8 @@ int main(void) {
     /* Init mef Procesamiento */
     MefProcesamientoInit(uartSend);
 
+    ADC0_init();
+
     /* Init buffer comandos recibidos */
     cmdBuffer = ringBufferComando_init(CMD_BUFFER_SIZE);
 
@@ -67,11 +71,11 @@ int main(void) {
 
 #ifdef USE_UART0
 
-bool uartReadByte(uint8_t *strByte){
+bool uartReadByte(char *strByte){
 	return (uart0_drv_recDatos(strByte, 1));
 }
 
-int32_t uartSend(uint8_t *sendBuffer, int32_t size){
+int32_t uartSend(char *sendBuffer, int32_t size){
 	return (uart0_drv_envDatos(sendBuffer, size));
 }
 

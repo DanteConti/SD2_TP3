@@ -14,7 +14,7 @@
 /* ================== [funciones publicas] ================== */
 
 void uart2_drv_init(void);
-int32_t uart2_drv_recDatos(uint8_t*, int32_t);
-int32_t uart2_drv_envDatos(uint8_t*, int32_t);
+int32_t uart2_drv_recDatos(char*, int32_t);
+int32_t uart2_drv_envDatos(char*, int32_t);
 
 #endif /* UART2_DRV_H_ */

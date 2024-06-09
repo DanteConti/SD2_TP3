@@ -15,8 +15,8 @@
 
 /* ================== [Punteros a funciones] ================== */
 
-typedef bool (*uartReadByte_t)(uint8_t*);
-typedef int32_t (*uartSend_t)(uint8_t*, int32_t);
+typedef bool (*uartReadByte_t)(char*);
+typedef int32_t (*uartSend_t)(char*, int32_t);
 
 /* ================== [Enumeraciones y estructuras públicas] ================== */
 // Mef Rx
@@ -24,6 +24,7 @@ typedef enum{
 	LED_T = 0,
 	SW_T,
 	ACC_T,
+	LSNS_T,
 	ERROR_T
 }TipoPeriferico;
 
@@ -33,6 +34,7 @@ typedef enum {
 	SW_ID_1,
 	SW_ID_3,
 	ACC,
+	LSNS,
 	ID_ERROR
 }IdPeriferico;
 

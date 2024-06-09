@@ -122,7 +122,7 @@ void uart0_drv_init(void){
             NULL);
 }
 
-int32_t uart0_drv_envDatos(uint8_t *pBuf, int32_t size){
+int32_t uart0_drv_envDatos(char *pBuf, int32_t size){
 	if(txOnGoingDma0 || txOnGoingUart0){
 		return 0;
 	}else{
@@ -147,7 +147,7 @@ int32_t uart0_drv_envDatos(uint8_t *pBuf, int32_t size){
  ** \param[in] size tamaño del buffer
  ** \return cantidad de bytes recibidos
  **/
-int32_t uart0_drv_recDatos(uint8_t *pBuf, int32_t size){
+int32_t uart0_drv_recDatos(char *pBuf, int32_t size){
     int32_t ret = 0;
 
     /* entra sección de código crítico */

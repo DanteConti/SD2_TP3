@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include "common.h"
+#include "ADC0.h"
 
 /* ================== [Punteros a funciones] ================== */
 
@@ -57,7 +59,7 @@ IdPeriferico definePeriferico(TipoPeriferico tipoPeriferico, uint8_t tmpRxByte){
 			}else if(tmpRxByte == 0x32){ // Id recibido 02
 				retVal = LED_ID_VERDE;
 			}else{
-				retVal = ERROR_T;
+				retVal = ID_ERROR;
 			}
 			break;
 		case SW_T:
@@ -66,18 +68,25 @@ IdPeriferico definePeriferico(TipoPeriferico tipoPeriferico, uint8_t tmpRxByte){
 			}else if(tmpRxByte == 0x33){ // ID recibido 13
 				retVal = SW_ID_3;
 			}else{
-				retVal = ERROR_T;
+				retVal = ID_ERROR;
 			}
 			break;
 		case ACC_T:
 			if(tmpRxByte == 0x30){ // ID recibido 20
 				retVal = ACC;
 			}else{
-				retVal = ERROR_T;
+				retVal = ID_ERROR;
+			}
+			break;
+		case LSNS_T:
+			if(tmpRxByte == 0x30){ // ID recibido 30
+				retVal = LSNS;
+			}else{
+				retVal = ID_ERROR;
 			}
 			break;
 		case ERROR_T:
-			retVal = ERROR_T;
+			retVal = ID_ERROR;
 			break;
 	}
 	return retVal;
@@ -100,7 +109,7 @@ void separarEnDigitos(uint8_t *d0, uint8_t *d1, uint8_t *d2, uint16_t value){
 	*d0 = value - *d2 * 100 - *d1*10;
 }
 
-uint8_t *ejecutarComando(uint8_t *resultado, Comando *comandoSiguiente){
+char *ejecutarComando(char *resultado, Comando *comandoSiguiente){
 
 	switch(comandoSiguiente->pedido){
 		case ENCENDER:
@@ -147,16 +156,23 @@ uint8_t *ejecutarComando(uint8_t *resultado, Comando *comandoSiguiente){
 				}else{
 					sprintf(resultado, ":1013N\n");
 				}
-			}else{
+			}else if (comandoSiguiente->periferico == ACC){
 				uint8_t D0, D1, D2;
 				uint16_t acc;
 				acc = getAcc();
 				separarEnDigitos(&D0, &D1, &D2, acc);
 				sprintf(resultado, ":1020%d%d%d\n", D2, D1, D0);
+			}else if(comandoSiguiente->periferico == LSNS){
+				ADC0_iniciarConv();
+				while(!g_Adc16ConversionDoneFlag);
+				uint16_t brightness = ADC0_getBrightness();
+				uint8_t D0, D1, D2;
+				separarEnDigitos(&D0, &D1, &D2, brightness);
+				sprintf(resultado, ":1030%d%d%d\n", D2, D1, D0);
 			}
 			break;
 		case TIPO_COMANDO_ERROR:
-			// para no tener warning
+			sprintf(resultado, "-1");
 			break;
 	}
 
@@ -175,7 +191,7 @@ void MefRxTick(void *ringBufferComandos){
 	static TipoPeriferico tmpPeriferico = ERROR_T;
 	static TipoComando tmpComando = TIPO_COMANDO_ERROR;
 	static Comando comando;
-	uint8_t rxChar;
+	char rxChar;
 
 	//byteAvailable = uart0_drv_recDatos(&rxChar, 1);
 	byteAvailable = uartReadByte(&rxChar);
@@ -216,6 +232,8 @@ void MefRxTick(void *ringBufferComandos){
 					tmpPeriferico = SW_T;
 				}else if(rxChar == 0x32){
 					tmpPeriferico = ACC_T;
+				}else if(rxChar == 0x33){
+					tmpPeriferico = LSNS_T;
 				}else{
 					tmpPeriferico = ERROR_T;
 				}
@@ -291,7 +309,7 @@ void MefProcesamientoInit(uartSend_t uartSendImplementation){
 void MefProcesamientoTick(void *ringBufferComandos){
 	static MEF_Procesamiento_e estadoMP = MefProcesamiento_LeyendoComandoSiguiente;
 	static Comando comandoPendiente;
-	static uint8_t resultado[10];
+	static char resultado[10];
 
 	switch(estadoMP){
 		case MefProcesamiento_LeyendoComandoSiguiente:
