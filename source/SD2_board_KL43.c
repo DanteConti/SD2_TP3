@@ -105,4 +105,8 @@ bool board_getSw(board_swId_enum id){
     return !GPIO_ReadPinInput(board_gpioSw[id].gpio, board_gpioSw[id].pin);
 }
 
+bool board_getLed(board_swId_enum id){
+    return !GPIO_PinRead(board_gpioLeds[id].gpio, board_gpioLeds[id].pin);
+}
+
 /*==================[end of file]============================================*/

@@ -169,6 +169,14 @@ char *ejecutarComando(char *resultado, Comando *comandoSiguiente){
 				uint8_t D0, D1, D2;
 				separarEnDigitos(&D0, &D1, &D2, brightness);
 				sprintf(resultado, ":1030%d%d%d\n", D2, D1, D0);
+			}else if(comandoSiguiente->periferico == LED_ID_ROJO){
+				bool res;
+				res = board_getLed(BOARD_LED_ID_ROJO);
+				(res) ? (sprintf(resultado, ":10011\n")) : (sprintf(resultado, ":10010\n"));
+			}else if(comandoSiguiente->periferico == LED_ID_VERDE){
+				bool res;
+				res = board_getLed(BOARD_LED_ID_VERDE);
+				(res) ? (sprintf(resultado, ":10021\n")) : (sprintf(resultado, ":10020\n"));
 			}
 			break;
 		case TIPO_COMANDO_ERROR:
@@ -274,6 +282,8 @@ void MefRxTick(void *ringBufferComandos){
 					tmpComando = APAGAR;
 				}else if(rxChar == 0x54){ // accion recibida T
 					tmpComando = TOGGLE;
+				}else if(rxChar == 0x52){ // accion recibida R
+					tmpComando = LECTURA;
 				}else{
 					tmpComando = TIPO_COMANDO_ERROR;
 				}
